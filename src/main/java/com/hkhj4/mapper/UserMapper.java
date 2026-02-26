@@ -7,10 +7,15 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface UserMapper {
     /**
+     * 登录
+     */
+    @Select("select email from tb_user where email=#{email} and password=#{password}")
+    TbUser userLogin(String email,String password);
+    /**
      * 获取用户信息
      */
-    @Select("select * from tb_user where email=#{email} and password=#{password}")
-    TbUser getUserInfo(String email,String password);
+    @Select("select username,email,gender,image,register_time from tb_user where email=#{email}")
+    TbUser getUserInfo(String email);
     /**
      * 判断邮箱是否已经注册
      */

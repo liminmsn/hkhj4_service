@@ -12,7 +12,7 @@ public class PremiumController {
     PremiumMapper premiumMapper;
 
     //获取订阅价格列表
-    @GetMapping("/premium_list")
+    @GetMapping("/api/premium/premium_list")
     Result getPremiumList(){
         return Result.success(premiumMapper.list());
     }
