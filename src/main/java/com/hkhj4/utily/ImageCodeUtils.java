@@ -1,14 +1,11 @@
 package com.hkhj4.utily;
 
 import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.util.Random;
 
 public class ImageCodeUtils {
 
     private static final String CODE_CHARS = "0123456789ABCDEFGHJKLMNPQRSTUVWXYZ";
-    private static final int WIDTH = 100;
-    private static final int HEIGHT = 40;
     private static final int CODE_LENGTH = 4;
 
     // 生成随机验证码文本

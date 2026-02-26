@@ -47,9 +47,9 @@ public class LoginCheckFilter implements Filter {
 
         try {
             Claims claims = jwtsUtil.parseJwt(jwt);
-            log.info("解析jwt成功!", claims.toString());
+            log.info("解析jwt成功!");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             log.info("token解析失败，返回未登录信息");
             Result error = Result.error(-1, "not_login");
             String notLogin = JSONObject.toJSONString(error);

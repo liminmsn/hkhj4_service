@@ -2,7 +2,6 @@ package com.hkhj4.controller;
 
 import com.hkhj4.entity.TbUser;
 import com.hkhj4.mapper.UserMapper;
-import com.hkhj4.utily.ImageCodeUtils;
 import com.hkhj4.utily.JwtsUtil;
 import com.hkhj4.utily.Result;
 import io.jsonwebtoken.Claims;
