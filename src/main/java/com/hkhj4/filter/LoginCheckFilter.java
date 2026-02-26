@@ -46,7 +46,7 @@ public class LoginCheckFilter implements Filter {
         }
 
         try {
-            Claims claims = jwtsUtil.parseJwt(jwt);
+            jwtsUtil.parseJwt(jwt);
             log.info("解析jwt成功!");
         } catch (Exception e) {
             log.error(e.getMessage());
