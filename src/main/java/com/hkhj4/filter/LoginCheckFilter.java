@@ -1,62 +1,79 @@
 package com.hkhj4.filter;
 
-import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hkhj4.utily.JwtsUtil;
 import com.hkhj4.utily.Result;
-import jakarta.annotation.Resource;
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
-
+import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
+import org.springframework.stereotype.Component;
+
 
 @Slf4j
 @Component
-@WebFilter(urlPatterns = "/*")
-public class LoginCheckFilter implements Filter {
-    @Resource(name = "jwtsUtil")
-    JwtsUtil jwtsUtil;
+public class LoginCheckFilter extends OncePerRequestFilter {
+    private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
+    private final JwtsUtil jwtsUtil;
+
+    public LoginCheckFilter(ObjectMapper objectMapper, JwtsUtil jwtsUtil, StringRedisTemplate redisTemplate) {
+        this.objectMapper = objectMapper;
+        this.jwtsUtil = jwtsUtil;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
+            throws ServletException, IOException {
 
-        String url = req.getRequestURL().toString();
+        String url = request.getRequestURI();
         log.info("url:{}", url);
 
-        if (url.contains("login") || url.contains("captcha")) {
-            log.info("登录|获取图片验证码,放行");
-            chain.doFilter(request, response);
+        // 放行接口
+        if (url.contains("/login") || url.contains("/captcha")) {
+            filterChain.doFilter(request, response);
             return;
         }
 
-        String jwt = req.getHeader("token");
-        if (!StringUtils.hasLength(jwt)) {
-            log.info("请求头token为空,不放行");
-            Result error = Result.error(-1, "not_login");
-            String notLogin = JSONObject.toJSONString(error);
-            res.getWriter().write(notLogin);
+        String token = request.getHeader("token");
+        if (!StringUtils.hasLength(token)) {
+            writeNotLogin(response);
             return;
         }
-
         try {
-            jwtsUtil.parseJwt(jwt);
-            log.info("解析jwt成功!");
+            // ✅ JWT校验
+            jwtsUtil.parseJwt(token);
+            // ✅ Redis校验登录状态
+            String redisKey = "login:token:" + token;
+            Object user = redisTemplate.opsForValue().get(redisKey);
+            if (user == null) {
+                writeNotLogin(response);
+                return;
+            }
+            // ⭐⭐⭐ 自动续签核心
+            redisTemplate.expire(redisKey, 30, TimeUnit.MINUTES);
         } catch (Exception e) {
-            log.error(e.getMessage());
-            log.info("token解析失败，返回未登录信息");
-            Result error = Result.error(-1, "not_login");
-            String notLogin = JSONObject.toJSONString(error);
-            res.getWriter().write(notLogin);
+            log.error("token解析失败: {}", e.getMessage());
+            writeNotLogin(response);
             return;
         }
 
-        //登录成功
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
+    }
+
+    private void writeNotLogin(HttpServletResponse response) throws IOException {
+
+        response.setContentType("application/json;charset=UTF-8");
+
+        Result error = Result.error(-1, "not_login");
+        response.getWriter().write(objectMapper.writeValueAsString(error));
     }
 }

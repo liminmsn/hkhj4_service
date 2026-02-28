@@ -9,7 +9,7 @@ public interface UserMapper {
     /**
      * 登录
      */
-    @Select("select email from tb_user where email=#{email} and password=#{password}")
+    @Select("select id,email from tb_user where email=#{email} and password=#{password}")
     TbUser userLogin(String email,String password);
     /**
      * 获取用户信息

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class PremiumController {
-    @Resource(name = "premiumMapper")
+    @Resource
     PremiumMapper premiumMapper;
 
     //获取订阅价格列表
