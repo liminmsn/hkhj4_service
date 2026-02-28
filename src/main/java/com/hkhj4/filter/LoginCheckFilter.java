@@ -1,6 +1,5 @@
 package com.hkhj4.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hkhj4.utily.JwtsUtil;
 import com.hkhj4.utily.Result;
 import jakarta.servlet.FilterChain;
@@ -10,11 +9,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 
 @Slf4j
@@ -31,14 +33,20 @@ public class LoginCheckFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String url = request.getRequestURI();
         log.info("url:{}", url);
 
         // 放行接口
-        if (url.contains("/login") || url.contains("/captcha")) {
+        if (url.contains("/login")
+                || url.contains("/captcha")
+                || url.contains("/doc")
+                || url.contains("/v3/api-docs")
+                || url.contains("/swagger")
+                || url.contains("/webjars")
+                || url.contains("/favicon")
+        ) {
             filterChain.doFilter(request, response);
             return;
         }

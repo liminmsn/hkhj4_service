@@ -3,6 +3,7 @@ package com.hkhj4.controller;
 import com.hkhj4.utily.ImageCodeUtils;
 import com.hkhj4.utily.IpUtils;
 import com.hkhj4.utily.Result;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import jakarta.annotation.Resource;
@@ -16,8 +17,9 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "auth-controller", description = "验证鉴权")
 public class AuthController {
-    @Resource
+    @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
 
     @GetMapping("/captcha")

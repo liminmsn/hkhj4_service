@@ -5,7 +5,7 @@ import com.hkhj4.mapper.UserMapper;
 import com.hkhj4.utily.JwtsUtil;
 import com.hkhj4.utily.Result;
 import io.jsonwebtoken.Claims;
-import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @RestController
+@Tag(name = "用户管理接口", description = "用户管理接口")
 public class UserController {
     @Resource
     RedisTemplate<String, Object> redisTemplate;
@@ -65,8 +66,9 @@ public class UserController {
         }
     }
 
+
     @PostMapping("api/user/createUser")
-    Result createUser(@Parameter(description = "用户信息，必填字段：username/password/email") @RequestBody TbUser tbUser) {
+    Result createUser(@RequestBody TbUser tbUser) {
         int count = userMapper.countEmail(tbUser.getEmail());
         if (count == 0) {
             userMapper.createUser(tbUser);
