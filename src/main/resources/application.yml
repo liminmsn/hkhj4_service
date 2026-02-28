@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: hkhj4Service
+  servlet:
+    encoding:
+      charset: utf-8
+      enabled: true
+  profiles:
+    active: dev
+    # ????????dev??????prod
+server:
+  port: 8080
+logging:
+  level:
+    root: info
