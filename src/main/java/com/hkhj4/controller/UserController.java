@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @RestController
-@Tag(name = "用户管理接口", description = "用户管理接口")
+@Tag(name = "用户管理接口")
 public class UserController {
     @Resource
     RedisTemplate<String, Object> redisTemplate;
@@ -28,6 +28,7 @@ public class UserController {
     UserMapper userMapper;
     @Resource
     JwtsUtil jwtsUtil;
+
 
     @PostMapping("/login")
     Result Login(String email, String password, String captchaKey, String captchaCode) {
@@ -65,7 +66,6 @@ public class UserController {
             }
         }
     }
-
 
     @PostMapping("api/user/createUser")
     Result createUser(@RequestBody TbUser tbUser) {

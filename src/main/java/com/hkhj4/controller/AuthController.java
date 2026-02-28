@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "auth-controller", description = "验证鉴权")
+@Tag(name = "验证鉴权")
 public class AuthController {
     @Resource(name = "stringRedisTemplate")
     private StringRedisTemplate redisTemplate;
