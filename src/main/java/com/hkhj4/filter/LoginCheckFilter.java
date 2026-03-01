@@ -26,10 +26,10 @@ public class LoginCheckFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final JwtsUtil jwtsUtil;
 
-    public LoginCheckFilter(ObjectMapper objectMapper, JwtsUtil jwtsUtil, StringRedisTemplate redisTemplate) {
+    public LoginCheckFilter(ObjectMapper objectMapper, JwtsUtil jwtsUtil, StringRedisTemplate stringRedisTemplate) {
         this.objectMapper = objectMapper;
         this.jwtsUtil = jwtsUtil;
-        this.redisTemplate = redisTemplate;
+        this.redisTemplate = stringRedisTemplate;
     }
 
     @Override
@@ -67,7 +67,7 @@ public class LoginCheckFilter extends OncePerRequestFilter {
                 return;
             }
             // ⭐⭐⭐ 自动续签核心
-            redisTemplate.expire(redisKey, 30, TimeUnit.MINUTES);
+            redisTemplate.expire(redisKey, 7, TimeUnit.DAYS);
         } catch (Exception e) {
             log.error("token解析失败: {}", e.getMessage());
             writeNotLogin(response);
@@ -81,7 +81,7 @@ public class LoginCheckFilter extends OncePerRequestFilter {
 
         response.setContentType("application/json;charset=UTF-8");
 
-        Result error = Result.error(-1, "not_login");
+        Result error = Result.error(-1, "未登录！");
         response.getWriter().write(objectMapper.writeValueAsString(error));
     }
 }

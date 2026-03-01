@@ -8,7 +8,7 @@ import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 @RestController
 @Tag(name = "用户管理接口")
 public class UserController {
-    @Resource
-    RedisTemplate<String, Object> redisTemplate;
+    @Resource(name = "stringRedisTemplate")
+    StringRedisTemplate redisTemplate;
     @Resource
     UserMapper userMapper;
     @Resource
@@ -31,16 +31,16 @@ public class UserController {
 
 
     @PostMapping("/login")
-    Result Login(String email, String password, String captchaKey, String captchaCode) {
+    Result Login(String email, String password) {
 
-        Object redisCode = redisTemplate.opsForValue().get(captchaKey);
-        if (redisCode == null) {
-            return Result.error(500, "验证码已过期");
-        }
-        //对比输入
-        if (!redisCode.toString().equalsIgnoreCase(captchaCode)) {
-            return Result.error(500, "验证码错误");
-        }
+//        Object redisCode = redisTemplate.opsForValue().get(captchaKey);
+//        if (redisCode == null) {
+//            return Result.error(500, "验证码已过期");
+//        }
+//        //对比输入
+//        if (!redisCode.toString().equalsIgnoreCase(captchaCode)) {
+//            return Result.error(500, "验证码错误");
+//        }
 
         int count_email = userMapper.countEmail(email);
         if (count_email == 0) {
@@ -50,8 +50,8 @@ public class UserController {
             if (user == null) {
                 return Result.error(400, "邮箱或者密码错误!");
             } else {
-                //删除redis存的验证码
-                redisTemplate.delete(captchaKey);
+//                //删除redis存的验证码
+//                redisTemplate.delete(captchaKey);
 
                 //登录成功
                 HashMap<String, Object> map = new HashMap<>();
@@ -61,7 +61,7 @@ public class UserController {
                 // Redis key
                 String redisKey = "login:token:" + token;
                 // token有效期 = JWT一致
-                redisTemplate.opsForValue().set(redisKey, user.getEmail(), 30, TimeUnit.MINUTES);
+                redisTemplate.opsForValue().set(redisKey, user.getEmail(), 7, TimeUnit.DAYS);
                 return Result.success(token);
             }
         }
