@@ -14,10 +14,6 @@ public class Result {
         result.data = data;
         return result;
     }
-
-    public static Result success() {
-        return result(200, "success", null);
-    }
     public static Result success(Object data) {
         return Result.result(200, "success", data);
     }
