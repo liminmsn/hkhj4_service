@@ -17,6 +17,18 @@ spring:
           max-idle: 8
           max-wait: -1ms
           min-idle: 0
+  mail:
+    host: smtp.qq.com
+    username: 1772081518@qq.com
+    password: lyxghmojogolbejd
+    port: 465
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+          auth: true
+        debug: true
 
 jwt:
   secret: hkhj4_2026_secure_key_12345678901234567890

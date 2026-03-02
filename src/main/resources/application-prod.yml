@@ -13,6 +13,18 @@ spring:
   devtools:
     restart:
       enabled: false
+  mail:
+    host: smtp.qq.com
+    username: 1772081518@qq.com
+    password: lyxghmojogolbejd
+    port: 465
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+          auth: true
+        debug: true
 
 mybatis:
   configuration:

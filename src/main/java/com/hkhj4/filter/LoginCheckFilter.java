@@ -40,6 +40,7 @@ public class LoginCheckFilter extends OncePerRequestFilter {
 
         // 放行接口
         if (url.contains("/login")
+                || url.contains("/createUser")
                 || url.contains("/captcha")
                 || url.contains("/doc")
                 || url.contains("/v3/api-docs")
