@@ -8,4 +8,10 @@
         insert into tb_user (username, password, email, image, gender, register_time, create_time, update_time)
         VALUES (#{username}, #{password}, #{email}, #{image}, #{gender}, now(), now(), now());
     </insert>
+    <update id="updateUserPassword">
+        UPDATE tb_user
+        SET password = #{password},
+        update_time = now()
+        WHERE email = #{email}; <!-- 按你之前的需求：邮箱存在时更新 -->
+    </update>
 </mapper>

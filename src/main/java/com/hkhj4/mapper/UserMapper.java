@@ -2,6 +2,7 @@ package com.hkhj4.mapper;
 
 import com.hkhj4.entity.TbUser;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 @Mapper
@@ -10,12 +11,14 @@ public interface UserMapper {
      * 登录
      */
     @Select("select id,email from tb_user where email=#{email} and password=#{password}")
-    TbUser userLogin(String email,String password);
+    TbUser userLogin(String email, String password);
+
     /**
      * 获取用户信息
      */
     @Select("select username,email,gender,image,register_time from tb_user where email=#{email}")
     TbUser getUserInfo(String email);
+
     /**
      * 判断邮箱是否已经注册
      */
@@ -26,4 +29,9 @@ public interface UserMapper {
      * 创建用户
      */
     int createUser(TbUser tbUser);
+
+    /**
+     * 修改密码
+     */
+    int updateUserPassword(@Param("password") String password, @Param("email") String email);
 }

@@ -73,9 +73,33 @@ public class UserController {
             userMapper.createUser(tbUser);
             //删除redis存的验证码
             redisTemplate.delete(email);
-            return Result.success(200,"注册成功！");
+            return Result.success(200, "注册成功！");
         }
         return Result.error(400, "邮箱已经注册！");
+    }
+
+    @PostMapping("/changePassword")
+    Result changePassword(TbUserRegister tbUser) {
+        String email = tbUser.getEmail();
+        int count_email = userMapper.countEmail(email);
+        //邮箱存在
+        if (count_email == 1) {
+            String code = tbUser.getCode();
+            String redisCode = redisTemplate.opsForValue().get(email);
+            if (redisCode == null) {
+                return Result.error(500, "验证码已过期");
+            }
+            if (!redisCode.equalsIgnoreCase(code)) {
+                return Result.error(500, "验证码错误");
+            }
+            //更新密码
+            var i = userMapper.updateUserPassword(tbUser.getPassword(), email);
+            if (i == 1) {
+                redisTemplate.delete(email);
+                return Result.success(200, "密码修改成功!");
+            }
+        }
+        return Result.error("邮箱未注册");
     }
 
     @GetMapping("api/user/info")
