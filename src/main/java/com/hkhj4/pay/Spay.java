@@ -1,0 +1,151 @@
+package com.hkhj4.pay;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Random;
+
+@Slf4j
+@Component
+public class Spay {
+    private final static String targetUrl = "https://zpayz.cn/mapi.php";
+    String pid = "2025040423043232";//商户id
+    String type = "alipay";//alipay 微信支付：wxpay
+    String outTradeNo = "";//不可重复，最多32位
+    String name = "iPhone17苹果手机";
+    String money = "1.00";
+    String signType = "MD5";
+    String key = "f8848mCKqEGc51N5Fp69FZNyNQbtFPqp";//商户密钥
+
+    /**
+     * 生成唯一的商户单号
+     * 规则：时间戳(13位) + 随机数(6位) = 19位（≤32位），保证唯一性
+     *
+     * @return 符合要求的商户单号
+     */
+    private String generateOutTradeNo() {
+        // 1. 获取当前时间戳（13位数字）
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        // 2. 生成6位随机数（000000-999999）
+        Random random = new Random();
+        String randomNum = String.format("%06d", random.nextInt(1000000));
+        // 3. 拼接成唯一单号（总长度19位，满足≤32位要求）
+        String tradeNo = timestamp + randomNum;
+        // 安全校验：如果长度超过32位，截取前32位（防止极端情况）
+        if (tradeNo.length() > 32) {
+            tradeNo = tradeNo.substring(0, 32);
+        }
+        return tradeNo;
+    }
+
+    /**
+     * 排序map
+     */
+    public static <K extends Comparable<? super K>, V> Map<K, V> sortByKey(Map<K, V> map) {
+        Map<K, V> result = new LinkedHashMap<>();
+
+        map.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
+        return result;
+    }
+
+    /**
+     * 发送POST请求（form-data格式）
+     *
+     * @param params 请求参数Map
+     * @throws Exception 异常
+     */
+    private void sendPostFormData(Map<String, String> params) throws Exception {
+        HttpURLConnection conn = getHttpURLConnection(params);
+
+        // 读取响应结果
+        StringBuilder response = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+        } catch (IOException e) {
+            // 捕获错误流（接口返回非200状态码时会走错误流）
+            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = errorReader.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+            log.error("请求失败，错误响应：{}", response);
+            throw new Exception("请求失败：" + response, e);
+        } finally {
+            conn.disconnect();
+        }
+
+        log.info("请求地址：{}，响应结果：{}", targetUrl, response);
+    }
+
+    private static HttpURLConnection getHttpURLConnection(Map<String, String> params) throws IOException {
+        String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
+        URL requestUrl = new URL(targetUrl);
+        HttpURLConnection conn = (HttpURLConnection) requestUrl.openConnection();
+        // 设置请求头和请求方式
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setUseCaches(false);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        // 构建form-data请求体
+        try (OutputStream out = conn.getOutputStream(); PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true)) {
+            // 遍历参数拼接form-data格式
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                writer.println("--" + boundary);
+                writer.println("Content-Disposition: form-data; name=\"" + entry.getKey() + "\"");
+                writer.println(); // 空行分隔头和内容
+                writer.println(entry.getValue());
+            }
+            // 结束边界
+            writer.println("--" + boundary + "--");
+            writer.flush();
+        }
+        return conn;
+    }
+
+    private Map<String, String> initPay() {
+        outTradeNo = generateOutTradeNo();
+        //参数存入 map
+        Map<String, String> sign = new HashMap<>();
+        sign.put("pid", pid);
+        sign.put("type", type);
+        sign.put("out_trade_no", outTradeNo);
+        sign.put("name", name);
+        sign.put("money", money);
+        sign.put("notify_url", "null");
+        sign = sortByKey(sign);
+        StringBuilder signStr = new StringBuilder();
+        for (Map.Entry<String, String> m : sign.entrySet()) {
+            signStr.append(m.getKey()).append("=").append(m.getValue()).append("&");
+        }
+        signStr = new StringBuilder(signStr.substring(0, signStr.length() - 1));
+        signStr.append(key);
+        signStr = new StringBuilder(DigestUtils.md5DigestAsHex(signStr.toString().getBytes()));
+        sign.put("sign", signStr.toString());
+        sign.put("sign_type", signType);
+        return sign;
+    }
+
+
+    public void getPayData() {
+        Map<String, String> sign = initPay();
+        try {
+            sendPostFormData(sign);
+        } catch (Exception e) {
+            log.error("错误{}", e.getMessage());
+        }
+    }
+}
