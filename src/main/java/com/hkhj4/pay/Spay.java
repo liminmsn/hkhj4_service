@@ -1,5 +1,6 @@
 package com.hkhj4.pay;
 
+import com.hkhj4.utily.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
@@ -18,13 +19,40 @@ import java.util.Random;
 public class Spay {
     private final static String targetUrl = "https://zpayz.cn/mapi.php";
     String pid = "2025040423043232";//商户id
-    String type = "alipay";//alipay 微信支付：wxpay
     String outTradeNo = "";//不可重复，最多32位
-    String name = "iPhone17苹果手机";
-    String money = "1.00";
+    //    String type = "alipay";//alipay 微信支付：wxpay
+    //    String name = "iPhone17苹果手机";
+    //    String money = "1.00";
     String signType = "MD5";
     String key = "f8848mCKqEGc51N5Fp69FZNyNQbtFPqp";//商户密钥
 
+
+    private static HttpURLConnection getHttpURLConnection(Map<String, String> params) throws IOException {
+        String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
+        URL requestUrl = new URL(targetUrl);
+        HttpURLConnection conn = (HttpURLConnection) requestUrl.openConnection();
+        // 设置请求头和请求方式
+        conn.setRequestMethod("POST");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setUseCaches(false);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+        // 构建form-data请求体
+        try (OutputStream out = conn.getOutputStream(); PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true)) {
+            // 遍历参数拼接form-data格式
+            for (Map.Entry<String, String> entry : params.entrySet()) {
+                writer.println("--" + boundary);
+                writer.println("Content-Disposition: form-data; name=\"" + entry.getKey() + "\"");
+                writer.println(); // 空行分隔头和内容
+                writer.println(entry.getValue());
+            }
+            // 结束边界
+            writer.println("--" + boundary + "--");
+            writer.flush();
+        }
+        return conn;
+    }
     /**
      * 生成唯一的商户单号
      * 规则：时间戳(13位) + 随机数(6位) = 19位（≤32位），保证唯一性
@@ -62,7 +90,7 @@ public class Spay {
      * @param params 请求参数Map
      * @throws Exception 异常
      */
-    private void sendPostFormData(Map<String, String> params) throws Exception {
+    public Result sendPostFormData(Map<String, String> params) throws Exception {
         HttpURLConnection conn = getHttpURLConnection(params);
 
         // 读取响应结果
@@ -81,42 +109,18 @@ public class Spay {
                 }
             }
             log.error("请求失败，错误响应：{}", response);
-            throw new Exception("请求失败：" + response, e);
+            return Result.error(500,"请求失败：" + response);
+//            throw new Exception("请求失败：" + response, e);
         } finally {
             conn.disconnect();
         }
 
         log.info("请求地址：{}，响应结果：{}", targetUrl, response);
+        return Result.success(response.toString());
     }
 
-    private static HttpURLConnection getHttpURLConnection(Map<String, String> params) throws IOException {
-        String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
-        URL requestUrl = new URL(targetUrl);
-        HttpURLConnection conn = (HttpURLConnection) requestUrl.openConnection();
-        // 设置请求头和请求方式
-        conn.setRequestMethod("POST");
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        conn.setUseCaches(false);
-        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        // 构建form-data请求体
-        try (OutputStream out = conn.getOutputStream(); PrintWriter writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), true)) {
-            // 遍历参数拼接form-data格式
-            for (Map.Entry<String, String> entry : params.entrySet()) {
-                writer.println("--" + boundary);
-                writer.println("Content-Disposition: form-data; name=\"" + entry.getKey() + "\"");
-                writer.println(); // 空行分隔头和内容
-                writer.println(entry.getValue());
-            }
-            // 结束边界
-            writer.println("--" + boundary + "--");
-            writer.flush();
-        }
-        return conn;
-    }
-
-    private Map<String, String> initPay() {
+    public Map<String, String> initPay(String name, String money,String type) {
         outTradeNo = generateOutTradeNo();
         //参数存入 map
         Map<String, String> sign = new HashMap<>();
@@ -141,7 +145,7 @@ public class Spay {
 
 
     public void getPayData() {
-        Map<String, String> sign = initPay();
+        Map<String, String> sign = initPay("苹果", "1.50","wxpay");
         try {
             sendPostFormData(sign);
         } catch (Exception e) {
