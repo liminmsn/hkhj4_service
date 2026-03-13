@@ -11,6 +11,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public Result ex(Exception e){
         log.error(e.getMessage());
-        return Result.error(500,"操作错误请联系管理员");
+        return Result.error(500,e.getMessage());
     }
 }

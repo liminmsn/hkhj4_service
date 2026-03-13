@@ -17,6 +17,9 @@ public class Result {
     public static Result success(Object data) {
         return Result.result(200, "success", data);
     }
+    public static Result success(Object data,String msg) {
+        return Result.result(200, msg, data);
+    }
     public static Result success(Integer code, String msg) {
         return result(code, msg, null);
     }

@@ -1,6 +1,7 @@
 package com.hkhj4.mapper;
 
 import com.hkhj4.entity.TbPremium;
+import com.hkhj4.entity.TbTradeNo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 
@@ -10,4 +11,6 @@ import java.util.List;
 public interface PremiumMapper {
     @Select("select * from tb_premium")
     List<TbPremium> list();
+
+    int createTradeNo(TbTradeNo tradeNo);
 }

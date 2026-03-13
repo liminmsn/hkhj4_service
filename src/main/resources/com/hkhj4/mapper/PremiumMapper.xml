@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hkhj4.mapper.PremiumMapper">
+
+    <insert id="createTradeNo"  parameterType="com.hkhj4.entity.TbTradeNo">
+        insert into tb_trade_no (trade_no, user_email, premium_id, pay_type, pay_state, create_time, update_time)
+        VALUES (#{tradeNo}, #{userEmail}, #{premiumId}, #{payType}, 0, NOW(), NOW());
+    </insert>
+</mapper>

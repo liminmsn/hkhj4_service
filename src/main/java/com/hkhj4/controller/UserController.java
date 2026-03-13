@@ -50,7 +50,7 @@ public class UserController {
                 // token有效期 = JWT一致
                 String redisKey = "login:token:" + token;
                 redisTemplate.opsForValue().set(redisKey, user.getEmail(), 7, TimeUnit.DAYS);
-                return Result.success(token);
+                return Result.result(200,"登录成功!",token);
             }
         }
     }
@@ -108,7 +108,7 @@ public class UserController {
             Claims claims = jwtsUtil.parseJwt(token);
             String email = claims.get("email").toString();
             TbUser user = userMapper.getUserInfo(email);
-            return Result.success(user);
+            return Result.result(200,"查询用户信息成功!",user);
         } catch (Exception e) {
             log.info(e.getMessage());
             return Result.error(401, "token无效或已过期");
