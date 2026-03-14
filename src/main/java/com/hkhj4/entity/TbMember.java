@@ -9,14 +9,10 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TbTradeNo {
-    Integer id;
-    String tradeNo;
-    String userEmail;
-    Integer premiumId;
-    String PayType;
-    Integer payState;
-    String sign;
+public class TbMember {
+    String email;
+    Integer premiumType;
+    LocalDateTime expireTime;
     LocalDateTime createTime;
     LocalDateTime updateTime;
 }

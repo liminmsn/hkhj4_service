@@ -43,6 +43,7 @@ public class LoginCheckFilter extends OncePerRequestFilter {
                 || url.contains("/createUser")
                 || url.contains("/changePassword")
                 || url.contains("/captcha")
+                || url.contains("/api/premium/spay_notify_url")
                 || url.contains("/doc")
                 || url.contains("/v3/api-docs")
                 || url.contains("/swagger")
