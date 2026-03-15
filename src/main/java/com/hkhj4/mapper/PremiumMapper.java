@@ -12,10 +12,10 @@ import java.util.List;
 
 @Mapper
 public interface PremiumMapper {
-    @Select("select price,price_discount,price_label,price_descritpion,day from tb_premium")
+    @Select("select price,price_discount,price_label,price_description,day from tb_premium")
     List<TbPremium> list();
 
-    @Select("select price,price_discount,price_label,price_descritpion,day from tb_premium where #{id}")
+    @Select("select price,price_discount,price_label,price_description,day from tb_premium where id=#{id}")
     TbPremium getPremium(Integer id);
 
     @Select("select trade_no,user_email,premium_id,pay_type,pay_state,sign from tb_trade_no where trade_no=#{tradeNo} AND sign=#{sign}")

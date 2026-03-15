@@ -73,7 +73,15 @@ public class PremiumController {
             //支付成功
             if (Objects.equals(spayNotifyUrl.getTrade_status(), "TRADE_SUCCESS")) {
                 TbMember tbMember_old = premiumMapper.getMembe(tradeNo.getUserEmail());
-                if (tbMember_old != null) {
+                if (tbMember_old == null) {
+                    //没有记录添加
+                    TbMember tbMember = new TbMember();
+                    tbMember.setEmail(tradeNo.getUserEmail());
+                    tbMember.setPremiumType(tradeNo.getPremiumId());
+                    tbMember.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
+                    premiumMapper.createMember(tbMember);
+
+                }else{
                     LocalDateTime expire_time = tbMember_old.getExpireTime();
                     //没过期叠加
                     if (expire_time.isAfter(LocalDateTime.now())) {
@@ -82,15 +90,7 @@ public class PremiumController {
                         tbMember_old.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
                     }
                     premiumMapper.updateMember(tbMember_old.getEmail(), tbMember_old.getExpireTime());
-                } else {
-                    //没有记录添加
-                    TbMember tbMember = new TbMember();
-                    tbMember.setEmail(tradeNo.getUserEmail());
-                    tbMember.setPremiumType(tradeNo.getPremiumId());
-                    tbMember.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
-                    premiumMapper.createMember(tbMember);
                 }
-
 
                 log.info("tradeNo:{}", tradeNo);
             }
