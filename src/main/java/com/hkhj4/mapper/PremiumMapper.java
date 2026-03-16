@@ -12,7 +12,7 @@ import java.util.List;
 
 @Mapper
 public interface PremiumMapper {
-    @Select("select price,price_discount,price_label,price_description,day from tb_premium")
+    @Select("select id,price,price_discount,price_label,price_description,day from tb_premium")
     List<TbPremium> list();
 
     @Select("select price,price_discount,price_label,price_description,day from tb_premium where id=#{id}")
@@ -23,8 +23,8 @@ public interface PremiumMapper {
 
     int createTradeNo(TbTradeNo tradeNo);
 
-    @Select("select email,expire_time from tb_member where email=#{email}")
-    TbMember getMembe(String email);
+    @Select("select create_time, premium_type,update_time,email,expire_time from tb_member where email=#{email}")
+    TbMember getMember(String email);
     @Update("update tb_member set expire_time=#{expire_time},update_time=NOW() where email=#{email}")
     int updateMember(String email, LocalDateTime expire_time);
     int createMember(TbMember tbMember);

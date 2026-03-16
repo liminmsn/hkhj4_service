@@ -60,6 +60,24 @@ public class PremiumController {
         return Result.success(data, "获取支付数据成功！");
     }
 
+    //查询订阅时长信息
+    @GetMapping("/api/premium/get_member")
+    Result getMember(HttpServletRequest request) {
+        //用户邮箱
+        String token = request.getHeader("token");
+        String redisKey = "login:token:" + token;
+        String email = stringRedisTemplate.opsForValue().get(redisKey);
+        TbMember tbMember = premiumMapper.getMember(email);
+        if (tbMember != null) {
+            if (tbMember.getExpireTime().isAfter(LocalDateTime.now())) {
+                return Result.success(tbMember);
+            }
+            return Result.error("订阅已经过期");
+        }
+        return Result.error("没有查到相关数据");
+    }
+
+    //支付平台结果通知
     @GetMapping("/api/premium/spay_notify_url")
     String SpayNotify(@Parameter SpayNotifyUrl spayNotifyUrl) {
         log.info("notify_url:{}", spayNotifyUrl);
@@ -72,7 +90,7 @@ public class PremiumController {
             TbPremium tbPremium = premiumMapper.getPremium(tradeNo.getPremiumId());
             //支付成功
             if (Objects.equals(spayNotifyUrl.getTrade_status(), "TRADE_SUCCESS")) {
-                TbMember tbMember_old = premiumMapper.getMembe(tradeNo.getUserEmail());
+                TbMember tbMember_old = premiumMapper.getMember(tradeNo.getUserEmail());
                 if (tbMember_old == null) {
                     //没有记录添加
                     TbMember tbMember = new TbMember();
@@ -81,7 +99,7 @@ public class PremiumController {
                     tbMember.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
                     premiumMapper.createMember(tbMember);
 
-                }else{
+                } else {
                     LocalDateTime expire_time = tbMember_old.getExpireTime();
                     //没过期叠加
                     if (expire_time.isAfter(LocalDateTime.now())) {
