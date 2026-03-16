@@ -1,7 +1,6 @@
 package com.hkhj4.utily;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
@@ -17,8 +16,8 @@ public class Spay {
     //    String name = "iPhone17苹果手机";
     //    String money = "1.00";
     String signType = "MD5";
-    @Value("pay_key")
-    String key = "f8848mCKqEGc51N5Fp69FZNyNQbtFPqp";//商户密钥
+    String key = "1xa6FEwJ7mc1iKxAdtvjGGTcYmo3j9NP";//商户密钥@Value("pay_notify_url")
+    String notify_url = "http://8.148.250.179:8080/api/premium/spay_notify_url";
 
     /**
      * 生成唯一的商户单号
@@ -61,7 +60,7 @@ public class Spay {
         sign.put("out_trade_no", outTradeNo);
         sign.put("name", name);
         sign.put("money", money);
-        sign.put("notify_url", "null");
+        sign.put("notify_url", notify_url);
         sign = sortByKey(sign);
         StringBuilder signStr = new StringBuilder();
         for (Map.Entry<String, String> m : sign.entrySet()) {

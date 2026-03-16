@@ -1,18 +1,29 @@
 spring:
+  devtools:
+    restart:
+      enabled: false
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/hkhj4?allowPublicKeyRetrieval=true&useSSL=true&serverTimezone=UTC
+    url: jdbc:mysql://192.168.1.9:3306/hkhj4?allowPublicKeyRetrieval=true&useSSL=true&serverTimezone=UTC
     username: admin
-    password: wxwxhn13.
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
       idle-timeout: 300000
-
-  devtools:
-    restart:
-      enabled: false
+  data:
+    redis:
+      host: 192.168.1.9
+      port: 6379
+      database: 0
+      connect-timeout: 6000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          max-wait: -1ms
+          min-idle: 0
+      password: 123456
   mail:
     host: smtp.qq.com
     username: 1772081518@qq.com
@@ -25,28 +36,26 @@ spring:
             enable: true
           auth: true
         debug: true
-
+jwt:
+  secret: hkhj4_2026_secure_key_12345678901234567890
+  expire: 3600000
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
-jwt:
-  secret: hkhj4_2026_secure_key_12345678901234567890
-  expire: 3600000
+server:
+  port: 8080
 
+
+#日志
 logging:
   level:
     root: WARN
     com.hkhj4: INFO
-
   file:
     name: /var/log/hkhj4Service/app.log
-
   logback:
     rolling policy:
-      file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.log"
+      file-name-pattern: "${LOG_FILE}.%d{yyyy-MM-dd}.%i.log"
       max-file-size: 100MB
       max-history: 30
-
-server:
-  port: 8080

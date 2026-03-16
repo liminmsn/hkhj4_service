@@ -6,10 +6,9 @@ spring:
       charset: utf-8
       enabled: true
   profiles:
-    active: dev
+    active: prod
 server:
   port: 8080
 logging:
   level:
     root: info
-pay_key: 1xa6FEwJ7mc1iKxAdtvjGGTcYmo3j9NP
