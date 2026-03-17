@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -49,7 +48,6 @@ public class PremiumController {
         tb.setPremiumId(premium_id);
         tb.setTradeNo(data.getTrade_no());
         tb.setPayType(type);
-        tb.setSign(sign.get("sign"));
         //用户邮箱
         String token = request.getHeader("token");
         String redisKey = "login:token:" + token;
@@ -77,43 +75,54 @@ public class PremiumController {
         return Result.error("没有查到相关数据");
     }
 
-    //支付平台结果通知
     @GetMapping("/api/premium/spay_notify_url")
-    String SpayNotify(@Parameter SpayNotifyUrl spayNotifyUrl) {
+    public String SpayNotify(@Parameter SpayNotifyUrl spayNotifyUrl) {
         log.info("notify_url:{}", spayNotifyUrl);
-        String trade_no = spayNotifyUrl.getTrade_no();
-        String sign = spayNotifyUrl.getSign();
+        String outTradeNo = spayNotifyUrl.getOut_trade_no();
+        // 1 查订单
+        TbTradeNo tradeNo = premiumMapper.getTradeNo(outTradeNo);
+        if (tradeNo == null) {
+            log.error("订单不存在: {}", outTradeNo);
+            return "fail";
+        }
+        //3 验签
+        Map<String, String> params = spay.getParams(spayNotifyUrl);
+        if (!spay.verifySign(params)) {
+            log.error("验签失败");
+            return "fail";
+        }
+        log.info("验签成功");
 
-        //匹配现有订单列表
-        TbTradeNo tradeNo = premiumMapper.getTradeNo(trade_no, sign);
-        if (tradeNo != null) {
+        // 4 防重复回调
+        if (tradeNo.getPayState() == 1) {
+            return "success";
+        }
+        // 3 判断支付状态
+        if ("TRADE_SUCCESS".equals(spayNotifyUrl.getTrade_status())) {
+            //价格列表item
             TbPremium tbPremium = premiumMapper.getPremium(tradeNo.getPremiumId());
-            //支付成功
-            if (Objects.equals(spayNotifyUrl.getTrade_status(), "TRADE_SUCCESS")) {
-                TbMember tbMember_old = premiumMapper.getMember(tradeNo.getUserEmail());
-                if (tbMember_old == null) {
-                    //没有记录添加
-                    TbMember tbMember = new TbMember();
-                    tbMember.setEmail(tradeNo.getUserEmail());
-                    tbMember.setPremiumType(tradeNo.getPremiumId());
-                    tbMember.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
-                    premiumMapper.createMember(tbMember);
+            //会员订阅剩余时间
+            TbMember tbMember_old = premiumMapper.getMember(tradeNo.getUserEmail());
 
+            if (tbMember_old == null) {
+                TbMember tbMember = new TbMember();
+                tbMember.setEmail(tradeNo.getUserEmail());
+                tbMember.setPremiumType(tradeNo.getPremiumId());
+                tbMember.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
+                //创建tbMember
+                premiumMapper.createMember(tbMember);
+            } else {
+                LocalDateTime expire_time = tbMember_old.getExpireTime();
+                if (expire_time.isAfter(LocalDateTime.now())) {
+                    tbMember_old.setExpireTime(expire_time.plusDays(tbPremium.getDay()));
                 } else {
-                    LocalDateTime expire_time = tbMember_old.getExpireTime();
-                    //没过期叠加
-                    if (expire_time.isAfter(LocalDateTime.now())) {
-                        tbMember_old.setExpireTime(expire_time.plusDays(tbPremium.getDay()));
-                    } else {
-                        tbMember_old.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
-                    }
-                    premiumMapper.updateMember(tbMember_old.getEmail(), tbMember_old.getExpireTime());
+                    tbMember_old.setExpireTime(LocalDateTime.now().plusDays(tbPremium.getDay()));
                 }
-
-                log.info("tradeNo:{}", tradeNo);
+                //叠加tbMember
+                premiumMapper.updateMember(tbMember_old.getEmail(), tbMember_old.getExpireTime());
             }
-        } else {
-            log.error("没有找到");
+            int i = premiumMapper.updateTradeNo(1, tradeNo.getTradeNo());
+            log.info("订单完成: {}", i);
         }
         return "success";
     }

@@ -1,9 +1,11 @@
 package com.hkhj4.utily;
 
+import com.hkhj4.entity.SpayNotifyUrl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 @Slf4j
@@ -15,7 +17,7 @@ public class Spay {
     //    String type = "alipay";//alipay 微信支付：wxpay
     //    String name = "iPhone17苹果手机";
     //    String money = "1.00";
-    String signType = "MD5";
+//    String signType = "MD5";
     String key = "1xa6FEwJ7mc1iKxAdtvjGGTcYmo3j9NP";//商户密钥@Value("pay_notify_url")
     String notify_url = "http://8.148.250.179:8080/api/premium/spay_notify_url";
 
@@ -40,37 +42,70 @@ public class Spay {
         return tradeNo;
     }
 
-    /**
-     * 排序map
-     */
-    public static <K extends Comparable<? super K>, V> Map<K, V> sortByKey(Map<K, V> map) {
-        Map<K, V> result = new LinkedHashMap<>();
-
-        map.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEachOrdered(e -> result.put(e.getKey(), e.getValue()));
-        return result;
+    public boolean verifySign(Map<String, String> params) {
+        if (params == null || params.isEmpty()) {
+            return false;
+        }
+        // 获取回调 sign
+        String paySign = params.get("sign");
+        // 复制参数，避免修改原map
+        Map<String, String> signParams = new TreeMap<>(params);
+        // 移除不参与签名的字段
+        signParams.remove("sign");
+        signParams.remove("sign_type");
+        // 拼接字符串
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : signParams.entrySet()) {
+            if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                continue;
+            }
+            sb.append(entry.getKey()).append("=").append(entry.getValue()).append("&");
+        }
+        // 删除最后一个 &
+        sb.deleteCharAt(sb.length() - 1);
+        // 拼接 KEY
+        sb.append(key);
+        // MD5
+        String localSign = DigestUtils.md5DigestAsHex(sb.toString().getBytes(StandardCharsets.UTF_8));
+        log.info("本地sign: {}", localSign);
+        log.info("回调sign: {}", paySign);
+        return localSign.equalsIgnoreCase(paySign);
     }
-
 
     public Map<String, String> initPay(String name, String money, String type) {
         outTradeNo = generateOutTradeNo();
-        //参数存入 map
-        Map<String, String> sign = new HashMap<>();
+        Map<String, String> sign = new TreeMap<>();
         sign.put("pid", pid);
         sign.put("type", type);
         sign.put("out_trade_no", outTradeNo);
         sign.put("name", name);
         sign.put("money", money);
         sign.put("notify_url", notify_url);
-        sign = sortByKey(sign);
-        StringBuilder signStr = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, String> m : sign.entrySet()) {
-            signStr.append(m.getKey()).append("=").append(m.getValue()).append("&");
+            sb.append(m.getKey()).append("=").append(m.getValue()).append("&");
         }
-        signStr = new StringBuilder(signStr.substring(0, signStr.length() - 1));
-        signStr.append(key);
-        signStr = new StringBuilder(DigestUtils.md5DigestAsHex(signStr.toString().getBytes()));
-        sign.put("sign", signStr.toString());
-        sign.put("sign_type", signType);
+        sb.deleteCharAt(sb.length() - 1);
+        sb.append(key);
+        String signValue = DigestUtils.md5DigestAsHex(sb.toString().getBytes(StandardCharsets.UTF_8));
+
+        sign.put("sign", signValue);
+        sign.put("sign_type", "MD5");
         return sign;
+    }
+
+    public Map<String, String> getParams(SpayNotifyUrl spayNotifyUrl) {
+        Map<String, String> params = new HashMap<>();
+        params.put("pid", spayNotifyUrl.getPid());
+        params.put("name", spayNotifyUrl.getName());
+        params.put("money", spayNotifyUrl.getMoney());
+        params.put("out_trade_no", spayNotifyUrl.getOut_trade_no());
+        params.put("trade_no", spayNotifyUrl.getTrade_no());
+        params.put("param", spayNotifyUrl.getParam());
+        params.put("trade_status", spayNotifyUrl.getTrade_status());
+        params.put("type", spayNotifyUrl.getType());
+        params.put("sign", spayNotifyUrl.getSign());
+        params.put("sign_type", spayNotifyUrl.getSign_type());
+        return params;
     }
 }

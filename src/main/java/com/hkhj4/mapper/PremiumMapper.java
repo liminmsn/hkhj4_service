@@ -18,14 +18,19 @@ public interface PremiumMapper {
     @Select("select price,price_discount,price_label,price_description,day from tb_premium where id=#{id}")
     TbPremium getPremium(Integer id);
 
-    @Select("select trade_no,user_email,premium_id,pay_type,pay_state,sign from tb_trade_no where trade_no=#{tradeNo} AND sign=#{sign}")
-    TbTradeNo getTradeNo(String tradeNo, String sign);
+    @Select("select trade_no,user_email,premium_id,pay_type,pay_state from tb_trade_no where trade_no=#{tradeNo}")
+    TbTradeNo getTradeNo(String tradeNo);
+
+    @Update("update tb_trade_no set pay_state=#{state} where trade_no=#{trade_no}")
+    int updateTradeNo(Integer state,String trade_no);
 
     int createTradeNo(TbTradeNo tradeNo);
 
     @Select("select create_time, premium_type,update_time,email,expire_time from tb_member where email=#{email}")
     TbMember getMember(String email);
+
     @Update("update tb_member set expire_time=#{expire_time},update_time=NOW() where email=#{email}")
     int updateMember(String email, LocalDateTime expire_time);
+
     int createMember(TbMember tbMember);
 }

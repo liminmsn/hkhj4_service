@@ -5,8 +5,8 @@
 <mapper namespace="com.hkhj4.mapper.PremiumMapper">
 
     <insert id="createTradeNo"  parameterType="com.hkhj4.entity.TbTradeNo">
-        insert into tb_trade_no (trade_no, user_email, premium_id, pay_type, pay_state, sign, create_time, update_time)
-        VALUES (#{tradeNo}, #{userEmail}, #{premiumId}, #{payType}, 0, #{sign}, NOW(), NOW());
+        insert into tb_trade_no (trade_no, user_email, premium_id, pay_type, pay_state,  create_time, update_time)
+        VALUES (#{tradeNo}, #{userEmail}, #{premiumId}, #{payType}, 0, NOW(), NOW());
     </insert>
 
     <insert id="createMember" parameterType="com.hkhj4.entity.TbMember">
